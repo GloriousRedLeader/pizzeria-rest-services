@@ -188,7 +188,7 @@ curl -i -XDELETE http://localhost:8080/menu/item/1
 Update a menu item:
 
 ```
-curl -i -XPUT http://localhost:8080/menu/item --header 'Content-Type: application/json' -d \
+curl -i -XPUT http://localhost:8080/menu/item/1 --header 'Content-Type: application/json' -d \
 '{
     "id":1,
     "price":17.99,
