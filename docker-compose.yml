@@ -1,0 +1,39 @@
+version: '3.7'
+services:
+
+  pizza_mysql:
+    build: 
+      context: ./mysql
+    ports:
+      - "3306:3306"
+    container_name: pizza_mysql
+    networks:
+      - pizza-net
+    hostname: pizza_mysql
+    
+  pizza_redis:
+    ports:
+      - "6379:6379"
+    image: redis:6.0.9
+    container_name: pizza_redis
+    networks:
+      - pizza-net
+    hostname: pizza_redis
+
+  pizza_services:
+    build: 
+      context: .
+    ports:
+      - "8080:8080"
+    container_name: pizza_services
+    networks:
+      - pizza-net
+    hostname: pizza_services
+    depends_on:
+      - pizza_mysql
+      - pizza_redis
+      
+networks:
+  pizza-net:
+    name: pizza-net
+    driver: bridge

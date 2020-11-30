@@ -1,0 +1,32 @@
+This file is a little journal of the process undertaken. It isn't very well organized or useful, mostly used to complain about time wasted while trying to figure something out, then discovering the recommended solution is itself incorrect, or not a valid spring convention, or was a valid spring convention a year ago but not any more.
+
+Original pitfall was trying to use a single model for both menu items and items placed in orders. Some fields, like quantity, only make sense in the context of an order - not a datbase driven menu. Conversely, the available field wouldn't make sense in the orders table. That information needs to be known in advance. The system isn't smart enough to track inventory (yet) so a user of the system woulld have to update an item to manually set it to unavailable until supplies become available.
+
+At first I was using a MySQL docker image with a custom startup script to build the tables - that is until I learned that hibernate can manage that on its own. Probably don't want those settings enabled in a production environment, but it certainly makes development easier.
+
+There is also a design decision as to whether create multiple entities for menu items, each with their own repo class, service class, rest endpoint in the controller and database table. The simpler option was a single menu table with a category field to distinguish. It is unrealistic that even the largest online pizza distributor would have millions of items in the menu such that they wouldd benefit froom this type of  distinsction. This is just data, and it is organized well enough. It is ultimately the responsibility of some service to ensure that a customer cannot order sauce by itself for example - that obviously is part of a pizza.
+
+For testing it appears that mockito is included as part of spring boot starter test, which is simply fantastic.
+
+We use @NotNull over @Column(nullable = false) to pre-validate input before hitting database - let the application generate the error.
+
+We are validating user input at the controller level versus the service layer. This decision was made because the net result is the same, and there is less code. We'll use a pure annotation solution with spring-boot-starter-validation. The alternative is to inject the the hibernate validator into each of our service classes and repeat the same validation code - or abstract that out to yet another service.
+
+Redis caching per the examples online is a complete travesty of justice. Hours were wasted because online examples showed caching rest controller's responses directly, turns out this is why we need a service layer because you can't do that. However after switching to the service layer methods caching worked. Decent service layer redis cache example: https://github.com/kanwarpannu/Caching-POC-Spring-Boot/blob/master/src/main/java/com/poc/cache/cachedemo/services/EmployeeService.java
+
+Trying to make testing use h2 instead of depending on a running mysql. There was an issue with the data.sql file that is part of db initialization. I had this set up under the main/resources configuration, but apparently hibernate picks this up on the classpath even during tests, and would fail. The solution here was to manually specify spring.datasource.data=classpath:bootstrap-db.sql in the main config, so during tests it would not automatically pick up the default file name data.sql and attempt to run it.
+
+For Lombok integration with IntelliJ you'll need to install the Lombok plugin. I have opted for Log4j2 as the implementation as I have familiarity with it. Many suitable candidates exist if there is a preferred provider.
+
+For the customer endpoint we'll be using BCrypt to hash passwords.
+
+Need to add proper exception handlng so we can generate a standard server error response message in case of errors. https://www.baeldung.com/exception-handling-for-rest-with-spring. For this we are going to use the new and improved controller advice technique to manage exceptions, instead of having scattered exceptioon annotations per controller, or in a base controller.
+
+Spring JWT works, though I admit I don't understand the internals. Ran into issues with having to define too many beans in a unit test after adding web security. Looks like this is an exercise in profiles to separate dev, prod and test. Refeerence for jwt: https://bezkoder.com/spring-boot-jwt-authentication/
+Mocking the authenticationmanager is one of the most challengiing things I've faced.
+
+Turns out it is very useful to logically organize all configuration beans into a single package so you can exclude them from unit tests. I was encountering absolute pain with trying to mock multiple beans to satisfy the autowiring security configuration related beans - which had nothing to do with the items I was testing, well very little anyway.
+
+Figured out how to do an integration test against an embedded tomcat. Turns out you can't (or at least I couldn't figure out anyway) how to use the EntityManager to provide some initial data so I had to autowire a repo which worked. Not sure if this is best practice. Probably makes sense to use the hibernate data initialization here for this purpose.
+
+As I was cleaning up the project I wanted to consolidate my test properties into application-test.properties and delete application.properties (all under src/test/resources). Turns out this is against the rules. Spring seems to think that there should always be an appllication.properties file perhaps as a base. So I went the other direction and put all test properties in application.properties and deleted application-test.properties. Kind of sad because I wanted it to match my test profile name.
