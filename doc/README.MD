@@ -1,6 +1,6 @@
 # Design Notes
 
-The goal is to create an exhaustive set of models that represent data in a fictitious online pizza ordering service. These data models need to cover all use cases. 
+The goal is to create an exhaustive set of models, services and infrastructure that constitute some fictitious online pizza ordering service.
 
 The basic requirements are:
 
@@ -9,13 +9,9 @@ The basic requirements are:
 3. Ability to email the order confirmation that contains the order details
 4. Any other enhancement(s) you can think of
 
-Please see the image in this folder titled "design.png" for the entity relationships.
+Please see the images in this folder for diagrams regarding infrastructure, entities and services.
 
 ### Thought Process
-
-Here I will justify my decisions.
-
-##### Menus & Orders
 
 Original design idea was to represent each piece of data as a model, which quickly turned into an unnessarily confusing mess. There were models for Cheese, Crust, Sauce, and a few others - which all did the same thing and had the same properties. So these were consolidated into a single MenuItem, where other, non-pizza items could co-exist. For example, the basic pieces of information we need are:
 
@@ -73,8 +69,6 @@ The service layer must ensure that this kind of **OrderItem** is invalid:
 ```
 
 Another great feature of our order design is that we can track, and subscribe to different stages of the order process and take action. Theoretical steps might be placing of an order successful payment of an order (these two may not be together if user opts to pay in cash later), chef has started work on order, food is cooked, order delivery has started, order has been fulfilled. With each of these steps we will log them as an **OrderStatusEvent** pertaining to this order. Interested services could subscribe to these events and take action like send emails or SMS. An example might be an email to a customer informing them the order is out for delivery.
-
-##### Payments
 
 Though I've never worked on enterprise software that exeutes financial transactionos, my assumption is that this information for different payment methods is distinct, and therefore warrants its own entities. In our fake pizzeria we have outlined three **PaymentMethod** entities, each with unique properties.
 
